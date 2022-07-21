@@ -1,5 +1,6 @@
 # JDownloadBot
 ![downloads](https://img.shields.io/github/downloads/darklol9/JDownloadBot/total.svg)
+![commit](https://img.shields.io/github/last-commit/darklol9/JDownloadBot.svg)
 
 Ready to use discord download bot for mainly jar-file based products.\
 Useful features:
@@ -16,6 +17,3 @@ If you wish to add your own watermarking, you may need some [asm](https://asm.ow
 
 ## Specs
 It is designed to work with MySql, but you can always change that, and I may add different versions so you can easily choose in the config file
-
-## Contributers
-- [darklol9](https://github.com/darklol9)
