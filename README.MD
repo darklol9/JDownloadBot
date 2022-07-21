@@ -1,5 +1,5 @@
 # JDownloadBot
-![downloads](https://img.shields.io/github/downloads/darklol9/JDownloadBot/total.svg)
+![downloads](https://img.shields.io/github.com/darklol9/JDowloadBot/total.svg)
 
 Ready to use discord download bot for mainly jar-file based products.\
 Useful features:
