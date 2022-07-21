@@ -1,6 +1,6 @@
 # JDownloadBot
 ![downloads](https://img.shields.io/github/downloads/darklol9/JDownloadBot/total.svg)
-![commit](https://img.shields.io/github/last-commit/darklol9/JDownloadBot.svg)
+![license](https://img.shields.io/github/license/darklol9/JDownloadBot)
 
 Ready to use discord download bot for mainly jar-file based products.\
 Useful features:
