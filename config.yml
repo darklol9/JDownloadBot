@@ -1,4 +1,4 @@
-token:
+token: token
 
 panels:
   download:
@@ -12,7 +12,7 @@ products:
   polar-vaults:
     name: Vaults
     table: vaults
-    url: https://auth.polar.com/v1/downloads/vault
+    url: https://google.com
     libraries: [ ]
 
 database:
@@ -28,3 +28,8 @@ database:
     password: pass
     host: localhost
     port: 22
+
+messages:
+  enqueue: You are **%d** in the queue
+  already-queued: You are currently **%d** in the queue for **%s**
+  not-whitelisted: You aren't whitelisted to **%s**

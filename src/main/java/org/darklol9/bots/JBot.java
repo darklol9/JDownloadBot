@@ -11,6 +11,7 @@ import org.darklol9.bots.events.EventCaller;
 import org.darklol9.bots.listeners.SystemListener;
 import org.darklol9.bots.products.Product;
 import org.darklol9.bots.tasks.TaskManager;
+import org.darklol9.bots.tasks.TaskQueue;
 import org.darklol9.bots.utils.configuration.ConfigurationSection;
 import org.darklol9.bots.utils.configuration.file.YamlConfiguration;
 import org.slf4j.Logger;
@@ -38,6 +39,8 @@ public class JBot {
 
     private TaskManager taskManager;
 
+    private TaskQueue taskQueue;
+
     @SneakyThrows
     public void run() {
         //------------------------------------------//
@@ -49,10 +52,10 @@ public class JBot {
         database = new DatabaseManager(this);
         Runtime.getRuntime().addShutdownHook(new Thread(database::close));
         taskManager = new TaskManager();
-        //------------------------------------------//
-        File downloads = new File("downloads");
-        assert downloads.mkdir();
-        downloads.deleteOnExit();
+        taskQueue = new TaskQueue();
+        Thread queue = new Thread(taskQueue);
+        queue.setName("TaskQueue");
+        queue.start();
         //------------------------------------------//
         products = new ArrayList<>();
         ConfigurationSection productsSection = config.getConfigurationSection("products");

@@ -1,4 +1,28 @@
-package org.darklol9.bots.utils.asm;
+/**
+ * The MIT License (MIT)
+ * <p>
+ * Copyright (C) 2018 CheatBreaker, LLC
+ * <p>
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * <p>
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * <p>
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.darklol9.bots.utils;
 
 import org.darklol9.bots.utils.asm.analysis.stack.ConstantTracker;
 import org.darklol9.bots.utils.asm.analysis.stack.ConstantValue;
@@ -7,29 +31,18 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.CodeSizeEvaluator;
 import org.objectweb.asm.tree.*;
-import org.objectweb.asm.tree.analysis.*;
-import org.objectweb.asm.util.Printer;
-import org.objectweb.asm.util.Textifier;
-import org.objectweb.asm.util.TraceMethodVisitor;
+import org.objectweb.asm.tree.analysis.Analyzer;
+import org.objectweb.asm.tree.analysis.AnalyzerException;
+import org.objectweb.asm.tree.analysis.Frame;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 public class AsmUtils implements Opcodes {
 
     public static final int MAX_INSTRUCTIONS = 0xFFFF;
-    private static final Printer printer = new Textifier();
-    private static final TraceMethodVisitor methodPrinter = new TraceMethodVisitor(printer);
-
-    public static InsnList println(String message) {
-        InsnList list = new InsnList();
-        list.add(new FieldInsnNode(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;"));
-        list.add(new LdcInsnNode(message));
-        list.add(new MethodInsnNode(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false));
-        return list;
-    }
 
     public static boolean isPushInt(AbstractInsnNode insn) {
         if (insn == null) return false;
@@ -57,7 +70,7 @@ public class AsmUtils implements Opcodes {
         throw new IllegalArgumentException("insn is not a push int instruction");
     }
 
-    public static MethodNode getClinit(ClassWrapper classNode) {
+    public static MethodNode getClinit(ClassNode classNode) {
         for (MethodNode method : classNode.methods) {
             if (method.name.equals("<clinit>")) {
                 return method;
@@ -200,68 +213,6 @@ public class AsmUtils implements Opcodes {
         }
     }
 
-    public static String print(AbstractInsnNode insnNode) {
-        if (insnNode == null) return "null";
-        insnNode.accept(methodPrinter);
-        StringWriter sw = new StringWriter();
-        printer.print(new PrintWriter(sw));
-        printer.getText().clear();
-        return sw.toString().trim();
-    }
-
-//    public static FieldNode findField(Obf obf, String owner, String name, String desc) {
-//        ClassWrapper classNode = obf.assureLoaded(owner);
-//        if (classNode == null) return null;
-//        return findField(classNode, name, desc);
-//    }
-
-    public static FieldNode findField(ClassWrapper classNode, String name, String desc) {
-        for (FieldNode field : classNode.fields) {
-            if ((name == null || field.name.equals(name)) && (desc == null || field.desc.equals(desc))) {
-                return field;
-            }
-        }
-        return null;
-    }
-
-//    public static MethodNode findMethod(Obf obf, String owner, String name, String descriptor) {
-//        ClassWrapper classNode = obf.assureLoaded(owner);
-//        if (classNode == null) return null;
-//        return findMethod(classNode, name, descriptor);
-//    }
-
-    public static MethodNode findMethod(ClassWrapper classNode, String name, String descriptor) {
-        for (MethodNode method : classNode.methods) {
-            if (method.name.equals(name) && (descriptor == null || method.desc.equals(descriptor))) {
-                return method;
-            }
-        }
-        return null;
-    }
-
-    public static InsnList iterate(InsnList instructions, AbstractInsnNode start, AbstractInsnNode end) {
-        InsnList list = new InsnList();
-        boolean f = false;
-        for (AbstractInsnNode instruction : instructions) {
-            if (!f && instruction == start) {
-                f = true;
-            }
-            if (f) {
-                list.add(instruction);
-            }
-            if (instruction == end) {
-                break;
-            }
-        }
-        return list;
-    }
-
-    public static ClassWrapper clone(ClassWrapper classNode) {
-        ClassWrapper c = new ClassWrapper(classNode.modify);
-        classNode.accept(c);
-        return c;
-    }
-
     public static void boxClass(InsnList list, Type type) {
         switch (type.getDescriptor()) {
             case "I":
@@ -297,12 +248,6 @@ public class AsmUtils implements Opcodes {
         }
     }
 
-    public static MethodNode createMethod(int access, String name, String desc) {
-        MethodNode m = new MethodNode(access, name, desc, null, null);
-        m.instructions = new InsnList();
-        return m;
-    }
-
     public static void boxReturn(Type returnType, InsnList list) {
         Random r = new Random();
         switch (returnType.getOpcode(IRETURN)) {
@@ -329,139 +274,7 @@ public class AsmUtils implements Opcodes {
         list.add(new InsnNode(returnType.getOpcode(IRETURN)));
     }
 
-    public static String parentName(String name) {
-        if (name.contains("/")) {
-            return name.substring(0, name.lastIndexOf("/") + 1);
-        } else {
-            return "";
-        }
-    }
-
-    public static void preverify(ClassWrapper classNode, MethodNode method) {
-        Analyzer<SourceValue> analyzer = new Analyzer<>(new SourceInterpreter());
-        try {
-            analyzer.analyzeAndComputeMaxs(classNode.name, method);
-        } catch (AnalyzerException e) {
-            System.out.println("Failed to preverify method: " + classNode.name + "." + method.name + method.desc);
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Creates a string incrementing in numerical value.
-     * Example: a, b, c, ... z, aa, ab ...
-     *
-     * @param index Name index.
-     * @return Generated String
-     */
-    public static String generateName(int index) {
-        String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toLowerCase(Locale.ROOT);
-        char[] charz = alphabet.toCharArray();
-        int alphabetLength = charz.length;
-        int m = 8;
-        final char[] array = new char[m];
-        int n = m - 1;
-        while (index > charz.length - 1) {
-            int k = Math.abs(-(index % alphabetLength));
-            array[n--] = charz[k];
-            index /= alphabetLength;
-            index -= 1;
-        }
-        array[n] = charz[index];
-        return new String(array, n, m - n);
-    }
-
-    public static InsnList grabArgs(boolean virt, Type[] _args) {
-        InsnList list = new InsnList();
-        int locals = 0;
-        if (virt)
-            locals++;
-        for (Type arg : _args) {
-            list.add(new VarInsnNode(arg.getOpcode(ILOAD), locals));
-            locals += arg.getSize();
-        }
-        return list;
-    }
-
-    public static String getExceptionClass(List<ClassWrapper> libs) {
-        while (true) {
-            for (ClassWrapper lib : libs) {
-                if (new Random().nextBoolean()) {
-                    if (lib.name.endsWith("Exception") || lib.superName.endsWith("Exception")) {
-                        return lib.name;
-                    }
-                }
-            }
-        }
-    }
-
-    public static InsnList storeStack(boolean virtual, Type[] types) {
-        InsnList list = new InsnList();
-
-        Type[] args = new Type[types.length + (virtual ? 1 : 0)];
-
-        System.arraycopy(types, 0, args, virtual ? 1 : 0, types.length);
-
-        if (virtual) {
-            args[0] = Type.getType("Ljava/lang/Object;");
-        }
-
-        list.add(pushInt(args.length));
-        list.add(new TypeInsnNode(ANEWARRAY, "java/lang/Object"));
-
-        for (int i = args.length - 1; i >= 0; i--) {
-            Type arg = args[i];
-            InsnList sub = new InsnList();
-            if (arg.getSize() > 1) {
-                sub.add(new InsnNode(DUP_X2));
-                sub.add(new InsnNode(DUP_X2));
-                sub.add(new InsnNode(POP));
-                sub.add(pushInt(i));
-                sub.add(new InsnNode(DUP_X2));
-                sub.add(new InsnNode(POP));
-            } else {
-                sub.add(new InsnNode(DUP_X1));
-                sub.add(new InsnNode(SWAP));
-                sub.add(pushInt(i));
-                sub.add(new InsnNode(SWAP));
-            }
-            boxPrimitive(arg.getDescriptor(), sub);
-            sub.add(new InsnNode(AASTORE));
-            list.add(sub);
-        }
-
-        return list;
-    }
-
-    public static List<AbstractInsnNode> grabLabel(MethodNode method, LabelNode start) {
-        boolean started = false;
-        List<AbstractInsnNode> list = new ArrayList<>();
-        for (AbstractInsnNode instruction : method.instructions) {
-            if (started && instruction instanceof LabelNode)
-                return list;
-            if (instruction instanceof LabelNode)
-                started = instruction.equals(start);
-            else if (started) {
-                list.add(instruction);
-            }
-        }
-        return list;
-    }
-
-    public static List<AbstractInsnNode> findInsn(MethodNode method, int... opcodes) {
-        List<AbstractInsnNode> list = new ArrayList<>();
-        for (AbstractInsnNode instruction : method.instructions) {
-            for (int opcode : opcodes) {
-                if (instruction.getOpcode() == opcode) {
-                    list.add(instruction);
-                    break;
-                }
-            }
-        }
-        return list;
-    }
-
-    public static Map<AbstractInsnNode, Frame<ConstantValue>> computeFrames(ClassWrapper classNode, MethodNode method, IConstantReferenceHandler handler) {
+    public static Map<AbstractInsnNode, Frame<ConstantValue>> computeFrames(ClassNode classNode, MethodNode method, IConstantReferenceHandler handler) {
         Analyzer<ConstantValue> analyzer =
                 new Analyzer<>(new ConstantTracker(handler, Modifier.isStatic(method.access), method.maxLocals, method.desc, new Object[0]));
 
@@ -476,6 +289,5 @@ public class AsmUtils implements Opcodes {
             throw new RuntimeException("Failed to compute frames");
         }
     }
-
 }
 
