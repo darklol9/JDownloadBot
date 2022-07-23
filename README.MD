@@ -15,4 +15,4 @@ If you wish to add your own watermarking, you may need some [asm](https://asm.ow
 - Setting obfuscation dictionaries to the username or user id of the user who is downloading
 
 ## Specs
-It is designed to work with MySql, but you can always change that, and I may add different versions so you can easily choose in the config file
+- MySql
