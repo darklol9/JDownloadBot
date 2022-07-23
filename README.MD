@@ -16,3 +16,46 @@ If you wish to add your own watermarking, you may need some [asm](https://asm.ow
 
 ## Specs
 - MySql
+
+## Screenshots
+### Download Panel
+![panel](https://cdn.upload.systems/uploads/Q3qMbzrF.png)
+
+## Configuration
+```yaml
+token: token
+
+panels:
+  download:
+    title: Polar Downloads
+    description: This is an area where you can download the polar products
+    footer: Polar Downloads
+    color: 11393254
+    channel: 0
+
+products:
+  polar-vaults:
+    name: Vaults
+    table: vaults
+    url: https://google.com
+    libraries: [ ]
+
+database:
+  query: SELECT * FROM %s WHERE discord = ?
+  username: root
+  password: pass
+  host: localhost
+  port: 3306
+  dbname: polar
+  use-ssl: false
+  ssl:
+    username: user
+    password: pass
+    host: localhost
+    port: 22
+
+messages:
+  enqueue: You are **%d** in the queue
+  already-queued: You are currently **%d** in the queue for **%s**
+  not-whitelisted: You aren't whitelisted to **%s**
+```
